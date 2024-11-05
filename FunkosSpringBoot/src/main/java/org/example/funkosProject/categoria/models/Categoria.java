@@ -23,7 +23,7 @@ public class Categoria {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "nombre")
+    @Column(name = "nombre", nullable = false, unique = true)
     private TipoCategoria nombre;
 
     @Column(name = "created_at")

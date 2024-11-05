@@ -6,12 +6,14 @@ import org.example.funkosProject.funko.services.FunkoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/funkos")
+@Validated
 public class FunkoController {
     private FunkoService service;
 
@@ -37,8 +39,8 @@ public class FunkoController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Funko> update(@PathVariable Long id, @Valid @RequestBody Funko funko) {
-        var result = service.update(id, funko);
+    public ResponseEntity<Funko> update(@PathVariable Long id, @Valid @RequestBody FunkoDto funkoDto) {
+        var result = service.update(id, funkoDto);
         return ResponseEntity.ok(result);
     }
 

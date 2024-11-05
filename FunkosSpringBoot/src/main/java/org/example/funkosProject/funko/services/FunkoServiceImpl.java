@@ -50,21 +50,22 @@ public class FunkoServiceImpl implements FunkoService{
     @CachePut
     @Override
     public Funko save(FunkoDto funkoDto) {
-        log.info("Guardando nuevo funko llamada: {}", funkoDto.getNombre());
+        log.info("Guardando nuevo funko llamado: {}", funkoDto.getNombre());
         var categoria = categoriaService.getByNombre(funkoDto.getCategoria());
         return repository.save(mapper.toFunko(funkoDto, categoria));
     }
 
     @CachePut
     @Override
-    public Funko update(Long id, Funko funko) {
+    public Funko update(Long id, FunkoDto funkoDto) {
         log.info("Actualizando funko con id: {}", id);
         var res = repository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el funko con id " + id)
         );
-        res.setNombre(funko.getNombre());
-        res.setPrecio(funko.getPrecio());
-        res.setCategoria(funko.getCategoria());
+        var categoria = categoriaService.getByNombre(funkoDto.getCategoria());
+        res.setNombre(funkoDto.getNombre());
+        res.setPrecio(funkoDto.getPrecio());
+        res.setCategoria(categoria);
         return repository.save(res);
     }
 

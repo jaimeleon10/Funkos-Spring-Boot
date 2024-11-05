@@ -27,13 +27,13 @@ public class Funko {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id=DEFAULT_ID;
 
-    @Column(name = "nombre", nullable = false)
+    @Column(name = "nombre", nullable = false, unique = true)
     @NotBlank(message = "El nombre no puede ser un campo vacio")
     private String nombre;
 
     @Column(name = "precio")
-    @Min(value = 0)
-    @Max(value = 50)
+    @Min(value = 0, message = "El precio debe ser mayor que 0")
+    @Max(value = 50, message = "El precio debe ser menor que 50")
     private Double precio;
 
     @ManyToOne
