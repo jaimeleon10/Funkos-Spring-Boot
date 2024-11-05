@@ -1,7 +1,6 @@
 package org.example.funkosProject.services.funkos.repositories;
 
 import org.example.funkosProject.categoria.models.Categoria;
-import org.example.funkosProject.categoria.models.TipoCategoria;
 import org.example.funkosProject.funko.models.Funko;
 import org.example.funkosProject.funko.repositories.FunkoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,26 +24,23 @@ class FunkoRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
 
-    private static Categoria categoriaTest = new Categoria(UUID.randomUUID(), TipoCategoria.DISNEY, LocalDateTime.now(), LocalDateTime.now(), true);
-    private static Funko funkoTest = new Funko(1L, "Mickey Mouse", 18.99, categoriaTest, LocalDateTime.now(), LocalDateTime.now());
+    private static final Categoria categoriaTest = new Categoria(UUID.fromString("3e678c5a-4de3-42d1-ab6a-833fa06befcc"), "DISNEY", LocalDateTime.now(), LocalDateTime.now(), true);
+    private static final Funko funkoTest = new Funko(1L, "Mickey Mouse", 18.99, categoriaTest, LocalDateTime.now(), LocalDateTime.now());
 
     @BeforeEach
     void setUp() {
-        entityManager.merge(categoriaTest);
-        entityManager.flush();
-        entityManager.merge(funkoTest);
-        entityManager.flush();
+        entityManager.persistAndFlush(funkoTest);
+        entityManager.persistAndFlush(categoriaTest);
     }
 
     @Test
     void findAll() {
-        var result = repository.findAll();
+        List<Funko> funkos = repository.findAll();
 
-        assertAll(
-                () -> assertEquals(1, result.size()),
-                () -> assertEquals(funkoTest.getNombre(), result.getFirst().getNombre()),
-                () -> assertEquals(funkoTest.getPrecio(), result.getFirst().getPrecio()),
-                () -> assertEquals(funkoTest.getCategoria(), result.getFirst().getCategoria())
+        assertAll("findAll",
+                () -> assertNotNull(funkos),
+                () -> assertFalse(funkos.isEmpty()),
+                () -> assertEquals(1, funkos.size())
         );
     }
 
@@ -53,6 +50,7 @@ class FunkoRepositoryTest {
 
         assertAll(
             () -> assertNotNull(result),
+            () -> assertEquals(funkoTest.getId(), result.get().getId()),
             () -> assertEquals(funkoTest.getNombre(), result.get().getNombre()),
             () -> assertEquals(funkoTest.getPrecio(), result.get().getPrecio()),
             () -> assertEquals(funkoTest.getCategoria(), result.get().getCategoria())

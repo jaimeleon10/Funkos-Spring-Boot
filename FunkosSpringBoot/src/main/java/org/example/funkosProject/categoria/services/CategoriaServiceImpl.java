@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.funkosProject.categoria.dto.CategoriaDto;
 import org.example.funkosProject.categoria.mappers.CategoriaMapper;
 import org.example.funkosProject.categoria.models.Categoria;
-import org.example.funkosProject.categoria.models.TipoCategoria;
 import org.example.funkosProject.categoria.repositories.CategoriaRepository;
 import org.example.funkosProject.categoria.validators.CategoriaValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +48,11 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    @Cacheable(key = "#nombre")
-    public Categoria getByNombre(TipoCategoria nombre) {
-        log.info("Buscando categoria llamada: {}", nombre);
-        return repository.findByNombre(nombre).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoria " + nombre + " no existe")
+    @Cacheable(key = "#nombreCategoria")
+    public Categoria getByNombre(String nombreCategoria) {
+        log.info("Buscando categoria llamada: {}", nombreCategoria);
+        return repository.findByNombre(nombreCategoria).orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoria " + nombreCategoria + " no existe")
         );
     }
 
@@ -61,9 +60,8 @@ public class CategoriaServiceImpl implements CategoriaService {
     @CachePut(key = "#result.id")
     public Categoria save(CategoriaDto categoriaDto) {
         log.info("Guardando nueva categoria llamada: {}", categoriaDto.getNombre());
-        if (!validator.isNombreCategoriaValido(categoriaDto.getNombre())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria no es valido. " +
-                    "Nombres disponibles: SERIE, DISNEY, SUPERHEROES, PELICULA, OTROS");
+        if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe ");
         }
         return repository.save(mapper.toCategoria(categoriaDto));
     }
@@ -75,9 +73,8 @@ public class CategoriaServiceImpl implements CategoriaService {
         var result = repository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe la categoria con id " + id)
         );
-        if (!validator.isNombreCategoriaValido(categoriaDto.getNombre())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria no es valido. " +
-                    "Nombres disponibles: SERIE, DISNEY, SUPERHEROES, PELICULA, OTROS");
+        if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe ");
         }
         return repository.save(mapper.toCategoriaUpdate(categoriaDto, result));
     }

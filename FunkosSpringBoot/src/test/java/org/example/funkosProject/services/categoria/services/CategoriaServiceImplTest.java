@@ -3,7 +3,6 @@ package org.example.funkosProject.services.categoria.services;
 import org.example.funkosProject.categoria.dto.CategoriaDto;
 import org.example.funkosProject.categoria.mappers.CategoriaMapper;
 import org.example.funkosProject.categoria.models.Categoria;
-import org.example.funkosProject.categoria.models.TipoCategoria;
 import org.example.funkosProject.categoria.repositories.CategoriaRepository;
 import org.example.funkosProject.categoria.services.CategoriaServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +36,7 @@ class CategoriaServiceImplTest {
     void setUp() {
         categoriaTest = new Categoria();
         categoriaTest.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766"));
-        categoriaTest.setNombre(TipoCategoria.DISNEY);
+        categoriaTest.setNombre("DISNEY");
         categoriaTest.setActivado(true);
     }
 
@@ -50,7 +49,7 @@ class CategoriaServiceImplTest {
         assertAll(
                 () -> assertEquals(1, result.size()),
                 () -> assertTrue(result.contains(categoriaTest)),
-                () -> assertEquals(TipoCategoria.DISNEY, result.getFirst().getNombre()),
+                () -> assertEquals("DISNEY", result.getFirst().getNombre()),
                 () -> assertTrue(result.getFirst().getActivado())
         );
 
@@ -65,7 +64,7 @@ class CategoriaServiceImplTest {
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(TipoCategoria.DISNEY, result.getNombre()),
+                () -> assertEquals("DISNEY", result.getNombre()),
                 () -> assertTrue(result.getActivado())
         );
 
@@ -74,27 +73,27 @@ class CategoriaServiceImplTest {
 
     @Test
     void getByNombre() {
-        when(repository.findByNombre(TipoCategoria.DISNEY)).thenReturn(Optional.ofNullable(categoriaTest));
+        when(repository.findByNombre("DISNEY")).thenReturn(Optional.ofNullable(categoriaTest));
 
-        var result = service.getByNombre(TipoCategoria.DISNEY);
+        var result = service.getByNombre("DISNEY");
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(TipoCategoria.DISNEY, result.getNombre()),
+                () -> assertEquals("DISNEY", result.getNombre()),
                 () -> assertTrue(result.getActivado())
         );
 
-        verify(repository, times(1)).findByNombre(TipoCategoria.DISNEY);
+        verify(repository, times(1)).findByNombre("DISNEY");
     }
 
     @Test
     void save() {
         CategoriaDto nuevaCategoria = new CategoriaDto();
-        nuevaCategoria.setNombre(String.valueOf(TipoCategoria.DISNEY));
+        nuevaCategoria.setNombre("DISNEY");
         nuevaCategoria.setActivado(true);
 
         Categoria categoria = new Categoria();
-        categoria.setNombre(TipoCategoria.valueOf(nuevaCategoria.getNombre()));
+        categoria.setNombre(nuevaCategoria.getNombre());
         categoria.setActivado(nuevaCategoria.getActivado());
 
         when(mapper.toCategoria(nuevaCategoria)).thenReturn(categoria);
@@ -104,7 +103,7 @@ class CategoriaServiceImplTest {
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(TipoCategoria.DISNEY, result.getNombre()),
+                () -> assertEquals("DISNEY", result.getNombre()),
                 () -> assertTrue(result.getActivado())
         );
 
@@ -115,7 +114,7 @@ class CategoriaServiceImplTest {
     @Test
     void update() {
         CategoriaDto updatedCategoria = new CategoriaDto();
-        updatedCategoria.setNombre(String.valueOf(TipoCategoria.SUPERHEROES));
+        updatedCategoria.setNombre("DISNEY");
         updatedCategoria.setActivado(true);
 
         when(repository.findById(updatedCategoria.getId())).thenReturn(Optional.ofNullable(mapper.toCategoria(updatedCategoria)));
@@ -126,7 +125,7 @@ class CategoriaServiceImplTest {
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(updatedCategoria.getId(), result.getId()),
-                () -> assertEquals(TipoCategoria.SUPERHEROES, result.getNombre()),
+                () -> assertEquals("SUPERHEROES", result.getNombre()),
                 () -> assertTrue(result.getActivado())
         );
 
@@ -138,7 +137,7 @@ class CategoriaServiceImplTest {
     void delete() {
         CategoriaDto nuevaCategoria = new CategoriaDto();
         nuevaCategoria.setId(UUID.randomUUID());
-        nuevaCategoria.setNombre(String.valueOf(TipoCategoria.SERIE));
+        nuevaCategoria.setNombre("SERIE");
         nuevaCategoria.setActivado(true);
 
         when(repository.findById(nuevaCategoria.getId())).thenReturn(Optional.of(new Categoria()));

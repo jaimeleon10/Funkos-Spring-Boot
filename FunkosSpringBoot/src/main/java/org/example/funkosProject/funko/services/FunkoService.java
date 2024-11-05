@@ -10,6 +10,7 @@ import java.util.List;
 public interface FunkoService {
     List<Funko> getAll();
     Funko getById(Long id);
+    Funko getByNombre(String nombre);
     Funko save(FunkoDto funkoDto);
     Funko update(Long id, FunkoDto funkoDto);
     Funko delete(Long id);

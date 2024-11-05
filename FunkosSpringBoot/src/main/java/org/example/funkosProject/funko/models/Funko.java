@@ -32,7 +32,7 @@ public class Funko {
     private String nombre;
 
     @Column(name = "precio")
-    @Min(value = 0, message = "El precio debe ser mayor que 0")
+    @Min(value = 1, message = "El precio debe ser mayor que 0")
     @Max(value = 50, message = "El precio debe ser menor que 50")
     private Double precio;
 

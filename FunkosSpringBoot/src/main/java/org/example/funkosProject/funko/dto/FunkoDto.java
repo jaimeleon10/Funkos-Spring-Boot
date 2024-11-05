@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.example.funkosProject.categoria.models.TipoCategoria;
 
 @Data
 public class FunkoDto {
@@ -15,5 +14,5 @@ public class FunkoDto {
         @Max(value = 50, message = "El precio debe ser menor que 50")
         Double precio;
         @NotNull(message = "La categoria no puede un campo vacio")
-        TipoCategoria categoria;
+        String categoria;
 }

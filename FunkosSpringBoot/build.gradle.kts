@@ -25,13 +25,15 @@ repositories {
 }
 
 dependencies {
+	// Web Spring Boot
 	implementation("org.springframework.boot:spring-boot-starter-web")
-
+	// JPA e Hibernate
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	// Base de datos H2
 	implementation("com.h2database:h2")
-
+	// Cache
 	implementation("org.springframework.boot:spring-boot-starter-cache")
-
+	// Validacion
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")

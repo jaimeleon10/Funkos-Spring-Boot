@@ -3,7 +3,6 @@ package org.example.funkosProject.services.funkos.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.example.funkosProject.categoria.models.Categoria;
-import org.example.funkosProject.categoria.models.TipoCategoria;
 import org.example.funkosProject.funko.dto.FunkoDto;
 import org.example.funkosProject.funko.mappers.FunkoMapper;
 import org.example.funkosProject.funko.models.Funko;
@@ -55,7 +54,7 @@ class FunkoControllerTest {
     @BeforeEach
     void setUp() {
         categoriaTest.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766"));
-        categoriaTest.setNombre(TipoCategoria.PELICULA);
+        categoriaTest.setNombre("PELICULA");
         categoriaTest.setActivado(true);
         objectMapper.registerModule(new JavaTimeModule());
 
@@ -113,13 +112,13 @@ class FunkoControllerTest {
     void save() throws Exception {
         Categoria nuevaCategoria = new Categoria();
         nuevaCategoria.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778777"));
-        nuevaCategoria.setNombre(TipoCategoria.DISNEY);
+        nuevaCategoria.setNombre("DISNEY");
         nuevaCategoria.setActivado(true);
 
         FunkoDto nuevoFunko = new FunkoDto();
         nuevoFunko.setNombre("Mickey Mouse");
         nuevoFunko.setPrecio(7.95);
-        nuevoFunko.setCategoria(TipoCategoria.DISNEY);
+        nuevoFunko.setCategoria("DISNEY");
 
         when(service.save(nuevoFunko)).thenReturn(mapper.toFunko(nuevoFunko, nuevaCategoria));
 
@@ -144,18 +143,17 @@ class FunkoControllerTest {
 
     @Test
     void update() throws Exception {
-        Categoria updatedCategoria = new Categoria();
-        updatedCategoria.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778788"));
-        updatedCategoria.setNombre(TipoCategoria.SUPERHEROES);
-        updatedCategoria.setActivado(true);
+        Categoria updateCategoria = new Categoria();
+        updateCategoria.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778788"));
+        updateCategoria.setNombre("SUPERHEROES");
+        updateCategoria.setActivado(true);
 
-        Funko updateFunko = new Funko();
-        updateFunko.setId(2L);
+        FunkoDto updateFunko = new FunkoDto();
         updateFunko.setNombre("Goku");
         updateFunko.setPrecio(15.99);
-        updateFunko.setCategoria(updatedCategoria);
+        updateFunko.setCategoria("DISNEY");
 
-        when(service.update(2L, updateFunko)).thenReturn(updateFunko);
+        when(service.update(2L, updateFunko)).thenReturn(mapper.toFunko(updateFunko, updateCategoria));
 
         MockHttpServletResponse response = mvc.perform(
                 put(myEndpoint + "/2")
@@ -167,10 +165,9 @@ class FunkoControllerTest {
 
         assertAll(
                 () -> assertEquals(response.getStatus(), HttpStatus.OK.value()),
-                () -> assertEquals(res.getId(), updateFunko.getId()),
                 () -> assertEquals(res.getNombre(), updateFunko.getNombre()),
                 () -> assertEquals(res.getPrecio(), updateFunko.getPrecio()),
-                () -> assertEquals(res.getCategoria(), updateFunko.getCategoria())
+                () -> assertEquals(res.getCategoria(), updateCategoria)
         );
 
         verify(service, times(1)).update(2L, updateFunko);

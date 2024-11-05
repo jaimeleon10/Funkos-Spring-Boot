@@ -1,7 +1,6 @@
 package org.example.funkosProject.services.categoria.repositories;
 
 import org.example.funkosProject.categoria.models.Categoria;
-import org.example.funkosProject.categoria.models.TipoCategoria;
 import org.example.funkosProject.categoria.repositories.CategoriaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +27,7 @@ class CategoriaRepositoryTest {
     void setUp() {
         categoriaTest = new Categoria();
         categoriaTest.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766"));
-        categoriaTest.setNombre(TipoCategoria.DISNEY);
+        categoriaTest.setNombre("DISNEY");
         categoriaTest.setActivado(true);
         entityManager.merge(categoriaTest);
     }
@@ -39,7 +38,7 @@ class CategoriaRepositoryTest {
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(TipoCategoria.DISNEY, result.get().getNombre()),
+                () -> assertEquals("DISNEY", result.get().getNombre()),
                 () -> assertTrue(result.get().getActivado())
         );
     }
@@ -50,18 +49,18 @@ class CategoriaRepositoryTest {
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(TipoCategoria.DISNEY, result.get().getNombre()),
+                () -> assertEquals("DISNEY", result.get().getNombre()),
                 () -> assertTrue(result.get().getActivado())
         );
     }
 
     @Test
     void findByNombre() {
-        var result = repository.findByNombre(TipoCategoria.DISNEY);
+        var result = repository.findByNombre("DISNEY");
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(TipoCategoria.DISNEY, result.get().getNombre()),
+                () -> assertEquals("DISNEY", result.get().getNombre()),
                 () -> assertTrue(result.get().getActivado())
         );
     }
