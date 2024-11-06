@@ -10,9 +10,13 @@ import lombok.Data;
 public class FunkoDto {
         @NotBlank(message = "El nombre no puede ser un campo vacio")
         String nombre;
+
         @Min(value = 0, message = "El precio debe ser mayor que 0")
         @Max(value = 50, message = "El precio debe ser menor que 50")
+        @NotNull(message = "El precio no puede ser un campo nulo")
         Double precio;
-        @NotNull(message = "La categoria no puede un campo vacio")
+
+        @NotBlank(message = "La categoria no puede ser un campo vacio")
+        @NotNull(message = "La categoria no puede un campo nulo")
         String categoria;
 }

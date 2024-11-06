@@ -31,7 +31,7 @@ public class Funko {
     @NotBlank(message = "El nombre no puede ser un campo vacio")
     private String nombre;
 
-    @Column(name = "precio")
+    @Column(name = "precio", nullable = false)
     @Min(value = 1, message = "El precio debe ser mayor que 0")
     @Max(value = 50, message = "El precio debe ser menor que 50")
     private Double precio;

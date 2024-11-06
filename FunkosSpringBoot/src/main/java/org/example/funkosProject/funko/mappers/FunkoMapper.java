@@ -19,4 +19,15 @@ public class FunkoMapper {
                 LocalDateTime.now()
         );
     }
+
+    public Funko toFunkoUpdate(FunkoDto funkoDto, Funko funko, Categoria categoria){
+        return new Funko(
+                funko.getId(),
+                funkoDto.getNombre(),
+                funkoDto.getPrecio(),
+                categoria,
+                funko.getCreatedAt(),
+                LocalDateTime.now()
+        );
+    }
 }

@@ -43,9 +43,12 @@ public class FunkoServiceImpl implements FunkoService{
 
     @Cacheable
     @Override
-    public Funko getById(Long id) {
+    public Funko getById(String id) {
         log.info("Buscando funko con id: {}", id);
-        return repository.findById(id).orElseThrow(
+        if (!validator.isIdValid(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El id no es valido. Debe ser de tipo Long");
+        }
+        return repository.findById(Long.parseLong(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el funko con id " + id)
         );
     }
@@ -73,9 +76,12 @@ public class FunkoServiceImpl implements FunkoService{
 
     @CachePut
     @Override
-    public Funko update(Long id, FunkoDto funkoDto) {
+    public Funko update(String id, FunkoDto funkoDto) {
         log.info("Actualizando funko con id: {}", id);
-        var res = repository.findById(id).orElseThrow(
+        if (!validator.isIdValid(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El id no es valido. Debe ser de tipo Long");
+        }
+        var res = repository.findById(Long.parseLong(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el funko con id " + id)
         );
         if (!validator.isNameUnique(funkoDto.getNombre())) {
@@ -90,12 +96,15 @@ public class FunkoServiceImpl implements FunkoService{
 
     @CacheEvict
     @Override
-    public Funko delete(Long id) {
+    public Funko delete(String id) {
         log.info("Borrando funko con id: {}", id);
-        Funko funko = repository.findById(id).orElseThrow(
+        if (!validator.isIdValid(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El id no es valido. Debe ser de tipo Long");
+        }
+        Funko funko = repository.findById(Long.parseLong(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el funko con id " + id)
         );
-        repository.deleteById(id);
+        repository.deleteById(Long.parseLong(id));
         return funko;
     }
 }

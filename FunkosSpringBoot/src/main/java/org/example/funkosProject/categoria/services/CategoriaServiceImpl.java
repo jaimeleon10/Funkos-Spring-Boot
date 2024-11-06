@@ -39,16 +39,19 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    @Cacheable(key = "#id")
-    public Categoria getById(UUID id) {
+    @Cacheable
+    public Categoria getById(String id) {
         log.info("Buscando categoria con id: {}", id);
-        return repository.findById(id).orElseThrow(
+        if (!validator.isIdValid(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La id no es válida. Debe ser un UUID");
+        }
+        return repository.findById(UUID.fromString(id)).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe la categoria con id " + id)
         );
     }
 
     @Override
-    @Cacheable(key = "#nombreCategoria")
+    @Cacheable
     public Categoria getByNombre(String nombreCategoria) {
         log.info("Buscando categoria llamada: {}", nombreCategoria);
         return repository.findByNombre(nombreCategoria).orElseThrow(
@@ -57,7 +60,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    @CachePut(key = "#result.id")
+    @CachePut
     public Categoria save(CategoriaDto categoriaDto) {
         log.info("Guardando nueva categoria llamada: {}", categoriaDto.getNombre());
         if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
@@ -67,23 +70,29 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    @CachePut(key = "#result.id")
-    public Categoria update(UUID id, CategoriaDto categoriaDto) {
+    @CachePut
+    public Categoria update(String id, CategoriaDto categoriaDto) {
         log.info("Actualizando categoria con id: {}", id);
-        var result = repository.findById(id).orElseThrow(
+        if (!validator.isIdValid(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La id no es válida. Debe ser un UUID");
+        }
+        var result = repository.findById(UUID.fromString(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe la categoria con id " + id)
         );
         if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe ");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe");
         }
         return repository.save(mapper.toCategoriaUpdate(categoriaDto, result));
     }
 
     @Override
-    @CachePut(key = "#result.id")
-    public Categoria delete(UUID id, CategoriaDto categoriaDto) {
+    @CachePut
+    public Categoria delete(String id, CategoriaDto categoriaDto) {
         log.info("Borrando categoria con id: {}", id);
-        var result = repository.findByIdAndActivadoTrue(id).orElseThrow(
+        if (!validator.isIdValid(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La id no es válida. Debe ser un UUID");
+        }
+        var result = repository.findByIdAndActivadoTrue(UUID.fromString(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe la categoria con id " + id)
         );
         return repository.save(mapper.toCategoriaUpdate(categoriaDto, result));

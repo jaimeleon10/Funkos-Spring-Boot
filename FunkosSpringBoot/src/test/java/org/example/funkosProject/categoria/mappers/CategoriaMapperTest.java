@@ -1,12 +1,9 @@
-package org.example.funkosProject.services.categoria.mappers;
+package org.example.funkosProject.categoria.mappers;
 
 import org.example.funkosProject.categoria.dto.CategoriaDto;
-import org.example.funkosProject.categoria.mappers.CategoriaMapper;
 import org.example.funkosProject.categoria.models.Categoria;
 import org.junit.jupiter.api.Test;
-
 import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class CategoriaMapperTest {
@@ -16,7 +13,7 @@ class CategoriaMapperTest {
     @Test
     void toCategoria() {
         CategoriaDto categoriaDto = new CategoriaDto();
-        categoriaDto.setNombre("DISNEY");
+        categoriaDto.setNombre("CATEGORIATEST");
         categoriaDto.setActivado(true);
 
         var res = mapper.toCategoria(categoriaDto);
@@ -30,12 +27,12 @@ class CategoriaMapperTest {
     @Test
     void toCategoriaUpdate() {
         CategoriaDto categoriaDto = new CategoriaDto();
-        categoriaDto.setNombre("DISNEY");
+        categoriaDto.setNombre("CATEGORIATEST");
         categoriaDto.setActivado(true);
 
         Categoria categoria = new Categoria(
                 null,
-                "DISNEY",
+                "CATEGORIATEST",
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 categoriaDto.getActivado()

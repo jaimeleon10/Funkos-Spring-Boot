@@ -32,7 +32,7 @@ public class CategoriaController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Categoria> getById(@PathVariable UUID id) {
+    public ResponseEntity<Categoria> getById(@PathVariable String id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
@@ -43,13 +43,13 @@ public class CategoriaController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Categoria> update(@PathVariable UUID id, @RequestBody CategoriaDto categoriaDto) {
+    public ResponseEntity<Categoria> update(@PathVariable String id, @RequestBody CategoriaDto categoriaDto) {
         var result = service.update(id, categoriaDto);
         return ResponseEntity.ok(result);
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<Categoria> delete(@PathVariable UUID id, @RequestBody CategoriaDto categoriaDto) {
+    public ResponseEntity<Categoria> delete(@PathVariable String id, @RequestBody CategoriaDto categoriaDto) {
         var result = service.delete(id, categoriaDto);
         return ResponseEntity.ok(result);
     }

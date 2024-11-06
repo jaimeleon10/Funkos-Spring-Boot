@@ -3,6 +3,8 @@ package org.example.funkosProject.funko.validators;
 import org.example.funkosProject.funko.repositories.FunkoRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class FunkoValidator {
 
@@ -14,5 +16,14 @@ public class FunkoValidator {
 
     public boolean isNameUnique(String nombre) {
         return funkoRepository.findByNombre(nombre).isEmpty();
+    }
+
+    public boolean isIdValid(String value) {
+        try {
+            Long.parseLong(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

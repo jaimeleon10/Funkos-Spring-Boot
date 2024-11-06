@@ -32,7 +32,7 @@ public class FunkoController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Funko> getById(@PathVariable Long id) {
+    public ResponseEntity<Funko> getById(@PathVariable String id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
@@ -43,13 +43,13 @@ public class FunkoController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Funko> update(@PathVariable Long id, @Valid @RequestBody FunkoDto funkoDto) {
+    public ResponseEntity<Funko> update(@PathVariable String id, @Valid @RequestBody FunkoDto funkoDto) {
         var result = service.update(id, funkoDto);
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Funko> delete(@PathVariable Long id) {
+    public ResponseEntity<Funko> delete(@PathVariable String id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
