@@ -1,21 +1,18 @@
 package org.example.funkosProject.storage.controllers;
 
-import org.example.funkosProject.storage.exceptions.StorageNotFound;
+import jakarta.servlet.http.HttpServletRequest;
+import org.example.funkosProject.storage.exceptions.StorageBadRequest;
 import org.example.funkosProject.storage.services.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
-import java.util.stream.Collectors;
+import java.io.InputStream;
 
-@Controller
+@RestController
+@RequestMapping("/funkos/files")
 public class StorageController {
 
     private final StorageService storageService;
@@ -25,44 +22,24 @@ public class StorageController {
         this.storageService = storageService;
     }
 
-    @GetMapping("/")
-    public String listUploadedFiles(Model model) throws IOException {
-
-        model.addAttribute("files", storageService.loadAll().map(
-                        path -> MvcUriComponentsBuilder.fromMethodName(StorageController.class,
-                                "serveFile", path.getFileName().toString()).build().toUri().toString())
-                .collect(Collectors.toList()));
-
-        return "uploadForm";
-    }
-
-    @GetMapping("/files/{filename:.+}")
+    @GetMapping(value = "{filename:.+}")
     @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename, HttpServletRequest request) {
         Resource file = storageService.loadAsResource(filename);
 
-        if (file == null)
-            return ResponseEntity.notFound().build();
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(file.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            throw new StorageBadRequest("No se puede determinar el tipo de fichero");
+        }
 
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(file);
     }
-
-    @PostMapping("/")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes) {
-
-        storageService.store(file);
-        redirectAttributes.addFlashAttribute("message",
-                "You successfully uploaded " + file.getOriginalFilename() + "!");
-
-        return "redirect:/";
-    }
-
-    @ExceptionHandler(StorageNotFound.class)
-    public ResponseEntity<?> handleStorageFileNotFound(StorageNotFound exc) {
-        return ResponseEntity.notFound().build();
-    }
-
 }

@@ -4,6 +4,8 @@ import org.example.funkosProject.categoria.dto.CategoriaDto;
 import org.example.funkosProject.categoria.models.Categoria;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CategoriaMapperTest {
@@ -45,6 +47,29 @@ class CategoriaMapperTest {
                 () -> assertEquals(categoriaDto.getId(), res.getId()),
                 () -> assertEquals(categoriaDto.getNombre(), res.getNombre()),
                 () -> assertEquals(categoriaDto.getActivado(), res.getActivado())
+        );
+    }
+
+    @Test
+    void toCategoriaUpdateNombreAndActivadoNull() {
+        CategoriaDto categoriaDto = new CategoriaDto();
+        categoriaDto.setNombre(null);
+        categoriaDto.setActivado(null);
+
+        Categoria categoria = new Categoria(
+                UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766"),
+                "CATEGORIATEST",
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true
+        );
+
+        var res = mapper.toCategoriaUpdate(categoriaDto, categoria);
+
+        assertAll(
+                () -> assertEquals(categoria.getId(), res.getId()),
+                () -> assertEquals(categoria.getNombre(), res.getNombre()),
+                () -> assertEquals(categoria.getActivado(), res.getActivado())
         );
     }
 }

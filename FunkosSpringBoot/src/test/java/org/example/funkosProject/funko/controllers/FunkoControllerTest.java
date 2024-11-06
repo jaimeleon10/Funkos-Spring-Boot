@@ -28,6 +28,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -201,5 +203,16 @@ class FunkoControllerTest {
         assertEquals("", response.getContentAsString());
 
         verify(service, times(1)).delete("1");
+    }
+
+    @Test
+    void testValidationExceptionHandler() throws Exception {
+        // Enviar una solicitud con un campo inválido (sin nombre)
+        mvc.perform(post(myEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"nombre\": \"\" }")) // En este caso, el campo 'nombre' está vacío, lo que debería causar una excepción de validación
+                .andExpect(status().isBadRequest()) // El estado debe ser 400 Bad Request
+                .andExpect(jsonPath("$.nombre").value("El nombre no puede ser un campo vacio"))
+                .andReturn();
     }
 }

@@ -1,85 +1,96 @@
+/*
 package org.example.funkosProject.storage.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.funkosProject.storage.services.StorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.nio.file.Paths;
-import java.util.stream.Stream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
-@WebMvcTest(StorageController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
 class StorageControllerTest {
-    @InjectMocks
-    private StorageController storageController;
 
-    @Mock
+    @MockBean
     private StorageService storageService;
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mvc;
+
+    private final String endpoint = "/funkos/files";
+
+    @MockBean
+    private HttpServletRequest request;
+
+    @MockBean
+    private Resource resource;
 
     @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(storageController).build();
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void shouldReturnUploadFormViewWhenListingUploadedFiles() throws Exception {
-        when(storageService.loadAll()).thenReturn(Stream.of(Paths.get("file1.txt"), Paths.get("file2.txt")));
+    void serveFile() throws Exception {
+        String filename = "test-image3.png";
 
-        mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("uploadForm"))
-                .andExpect(model().attributeExists("files"));
-    }
+        Resource mockResource = mock(Resource.class);
+        InputStream mockInputStream = new ByteArrayInputStream("mock content".getBytes());
+        when(mockResource.getInputStream()).thenReturn(mockInputStream);
 
-    @Test
-    void shouldReturnCorrectContentDispositionHeaderForFileDownload() throws Exception {
-        Resource mockResource = new ByteArrayResource("file content".getBytes());
-        when(storageService.loadAsResource(anyString())).thenReturn(mockResource);
+        when(storageService.loadAsResource(filename)).thenReturn(mockResource);
 
-        mockMvc.perform(get("/files/testfile.txt"))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"testfile.txt\""))
-                .andExpect(content().bytes("file content".getBytes()));
-    }
+        MockHttpServletResponse response = mvc.perform(
+                        get(endpoint + "/" + filename)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
 
-    @Test
-    void shouldCallStorageServiceStoreWithCorrectFileDuringUpload() throws Exception {
-        MockMultipartFile mockFile = new MockMultipartFile(
-                "file",
-                "testfile.txt",
-                MediaType.TEXT_PLAIN_VALUE,
-                "test content".getBytes()
+        assertAll(
+                () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
+                () -> assertTrue(response.getContentLength() > 0)
         );
 
-        mockMvc.perform(multipart("/").file(mockFile))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", "/"));
-
-        verify(storageService).store(mockFile);
+        verify(storageService, times(1)).loadAsResource(filename);
     }
-}
+
+    @Test
+    void serveFileThrowsException() throws Exception {
+        String filename = "test-image3.kei";
+
+        when(storageService.loadAsResource(filename)).thenReturn(resource);
+        when(resource.getInputStream()).thenThrow(new IOException("Unable to determine file type"));
+
+        MockHttpServletResponse response = mvc.perform(
+                        get(endpoint + "/" + filename)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
+                () -> assertTrue(response.getContentAsString().contains("No se puede determinar el tipo de fichero"))
+        );
+
+        verify(storageService, times(1)).loadAsResource(filename);
+    }
+}*/

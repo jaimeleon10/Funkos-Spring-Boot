@@ -1,114 +1,159 @@
 package org.example.funkosProject.storage.services;
 
-import org.example.funkosProject.storage.config.StorageConfig;
-import org.example.funkosProject.storage.exceptions.StorageException;
 import org.example.funkosProject.storage.exceptions.StorageNotFound;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ExtendWith(MockitoExtension.class)
 class StorageServiceImplTest {
 
     @Mock
-    private StorageConfig config;
+    private MultipartFile multipartFile;
 
-    @InjectMocks
-    private StorageServiceImpl storageService;
+    private static Path mockRootLocation;
+
+    private StorageServiceImpl storageServiceImpl;
 
     @BeforeEach
-    public void setUp() {
-        storageService = new StorageServiceImpl(config);
+    void setUp() throws IOException {
+        mockRootLocation = Paths.get("test_imgs");
+        storageServiceImpl = new StorageServiceImpl(mockRootLocation.toString());
+    }
+
+    @AfterAll
+    public static void tearDown() throws IOException {
+        Files.walk(mockRootLocation)
+                .filter(Files::isRegularFile)
+                .forEach(file -> {
+                    try {
+                        Files.delete(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+        Files.deleteIfExists(mockRootLocation);
     }
 
     @Test
-    public void testConstructorThrowsExceptionWhenLocationEmpty() {
-        StorageConfig config = mock(StorageConfig.class);
-        when(config.getLocation()).thenReturn("  ");
-
-        assertThrows(StorageException.class, () -> {
-            new StorageServiceImpl(config);
-        });
+    void init() {
+        storageServiceImpl.init();
+        assertTrue(Files.exists(mockRootLocation));
     }
+
     @Test
-    public void testStoreShouldThrowStorageExceptionWhenFileIsEmpty() {
-        // Arrange
-        MockMultipartFile emptyFile = new MockMultipartFile("test.txt", "test.txt", "text/plain", new byte[0]);
+    void store() throws IOException {
+        String filename = "test-image3.png";
+        Files.createFile(mockRootLocation.resolve("test-image3.png"));
+        when(multipartFile.getOriginalFilename()).thenReturn(filename);
+        when(multipartFile.isEmpty()).thenReturn(false);
+        when(multipartFile.getInputStream()).thenReturn(mock(InputStream.class));
 
-        // Act & Assert
-        StorageException exception = assertThrows(StorageException.class, () -> {
-            storageService.store(emptyFile);
-        });
-
-        assertEquals("Failed to store empty file.", exception.getMessage());
+        String storedFilename = storageServiceImpl.store(multipartFile);
+        assertTrue(storedFilename.contains("test-image"));
+        verify(multipartFile, times(1)).getInputStream();
     }
+
     @Test
-    public void testLoadAsResourceThrowsStorageNotFoundWhenFileNotExistsOrNotReadable() throws Exception {
-        // Arrange
-        String filename = "non-existent-file.txt";
-        Path filePath = mock(Path.class);
-        Resource resource = mock(Resource.class);
-        when(storageService.load(filename)).thenReturn(filePath);
-        when(filePath.toUri()).thenReturn(new URI("file:///non-existent-file.txt"));
-        when(resource.exists()).thenReturn(false);
-        when(resource.isReadable()).thenReturn(false);
+    void storeEmptyFile() {
+        String filename = "test-image.png";
+        when(multipartFile.getOriginalFilename()).thenReturn(filename);
+        when(multipartFile.isEmpty()).thenReturn(true);
 
-        // Act & Assert
-        StorageNotFound exception = assertThrows(StorageNotFound.class, () -> {
-            storageService.loadAsResource(filename);
-        });
-
-        assertEquals("Could not read file: " + filename, exception.getMessage());
+        assertThrows(StorageNotFound.class, () -> storageServiceImpl.store(multipartFile));
     }
+
     @Test
-    public void testDeleteAllShouldDeleteAllFilesAndDirectories() throws IOException {
-        // Arrange
-        Path testDir = Files.createTempDirectory("test-storage");
-        Path testFile = testDir.resolve("test-file.txt");
-        Files.write(testFile, "test content".getBytes());
+    void storeFileWithRelativePath() {
+        String filename = "../test-image.png";
+        when(multipartFile.getOriginalFilename()).thenReturn(filename);
+        when(multipartFile.isEmpty()).thenReturn(false);
 
-        StorageConfig config = mock(StorageConfig.class);
-        when(config.getLocation()).thenReturn(testDir.toString());
-        StorageServiceImpl storageService = new StorageServiceImpl(config);
-
-        // Act
-        storageService.deleteAll();
-
-        // Assert
-        assertFalse(Files.exists(testFile), "Test file should not exist");
-        assertFalse(Files.exists(testDir), "Test directory should not exist");
+        assertThrows(StorageNotFound.class, () -> storageServiceImpl.store(multipartFile));
     }
+
     @Test
-    public void testLoadAllReturnsEmptyStreamWhenNoFilesExist() throws IOException {
-        // Arrange
-        Path emptyDir = Files.createTempDirectory("empty-test-dir");
-        StorageConfig config = mock(StorageConfig.class);
-        when(config.getLocation()).thenReturn(emptyDir.toString());
-        StorageServiceImpl storageService = new StorageServiceImpl(config);
+    void loadAll() throws IOException {
+        Files.createDirectories(mockRootLocation);
 
-        // Act
-        Stream<Path> result = storageService.loadAll();
+        Stream<Path> files = storageServiceImpl.loadAll();
+        assertEquals(2, files.count());
+    }
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(0, result.count());
+    @Test
+    void load() {
+        Path path = storageServiceImpl.load("test-image.png");
+        assertEquals(mockRootLocation.resolve("test-image.png"), path);
+    }
 
-        // Clean up
-        Files.delete(emptyDir);
+    @Test
+    void loadAsResource() {
+        Resource returnedResource = storageServiceImpl.loadAsResource("test-image3.png");
+        assertNotNull(returnedResource);
+    }
+
+    @Test
+    void loadAsResourceNotFound() {
+        assertThrows(StorageNotFound.class, () -> storageServiceImpl.loadAsResource("image.png"));
+    }
+
+    @Test
+    void delete() throws IOException {
+        Files.createDirectories(mockRootLocation);
+        Files.createFile(mockRootLocation.resolve("test-image9.png"));
+
+        storageServiceImpl.delete("test-image9.png");
+        assertFalse(Files.exists(mockRootLocation.resolve("test-image9.png")));
+    }
+
+    @Test
+    void deleteAll() throws IOException {
+        Files.createDirectories(mockRootLocation);
+        Files.createFile(mockRootLocation.resolve("test-image10.png"));
+        Files.createFile(mockRootLocation.resolve("test-image11.png"));
+
+        assertEquals(2, Files.list(mockRootLocation).count());
+
+        storageServiceImpl.deleteAll();
+
+        assertEquals(0, Files.list(mockRootLocation).count());
+        assertTrue(Files.exists(mockRootLocation));
+    }
+
+    @Test
+    void getUrl() {
+
+        String filename = "test-image.png";
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/files/" + filename);
+
+        ServletRequestAttributes attributes = new ServletRequestAttributes(request);
+        RequestContextHolder.setRequestAttributes(attributes);
+        String url = storageServiceImpl.getUrl(filename);
+
+        assertTrue(url.contains("/files/"));
+        assertTrue(url.contains(filename));
+
+        RequestContextHolder.resetRequestAttributes();
     }
 }

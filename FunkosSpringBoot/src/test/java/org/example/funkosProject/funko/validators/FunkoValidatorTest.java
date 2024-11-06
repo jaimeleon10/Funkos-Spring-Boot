@@ -50,4 +50,22 @@ class FunkoValidatorTest {
 
         verify(repository, times(1)).findByNombre(nombre);
     }
+
+    @Test
+    public void isIdValid() {
+        String id = "1";
+
+        boolean result = funkoValidator.isIdValid(id);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void isIdInvalid() {
+        String id = "1a";
+
+        boolean result = funkoValidator.isIdValid(id);
+
+        assertFalse(result);
+    }
 }
