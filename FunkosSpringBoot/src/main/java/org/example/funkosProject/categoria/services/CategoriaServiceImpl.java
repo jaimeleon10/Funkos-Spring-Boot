@@ -64,7 +64,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     public Categoria save(CategoriaDto categoriaDto) {
         log.info("Guardando nueva categoria llamada: {}", categoriaDto.getNombre());
         if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe ");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe");
         }
         return repository.save(mapper.toCategoria(categoriaDto));
     }

@@ -165,6 +165,31 @@ class CategoriaServiceImplTest {
     }
 
     @Test
+    void saveInvalidName() {
+        CategoriaDto nuevaCategoriaDto = new CategoriaDto();
+        nuevaCategoriaDto.setNombre("CategoriaTest");
+        nuevaCategoriaDto.setActivado(true);
+
+        Categoria nuevaCategoria = new Categoria();
+        nuevaCategoria.setNombre("CategoriaTest");
+        nuevaCategoria.setActivado(true);
+
+        when(mapper.toCategoria(nuevaCategoriaDto)).thenReturn(nuevaCategoria);
+        when(validator.isNameUnique("CategoriaTest")).thenReturn(false);
+
+        ResponseStatusException thrown = assertThrows(
+                ResponseStatusException.class, () -> service.save(nuevaCategoriaDto)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatusCode());
+        assertEquals("El nombre de la categoria ya existe", thrown.getReason());
+
+        verify(validator, times(1)).isNameUnique(nuevaCategoriaDto.getNombre());
+        verify(mapper, times(1)).toCategoria(nuevaCategoriaDto);
+
+    }
+
+    @Test
     void update() {
         UUID id = UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766");
         CategoriaDto categoriaUpdateDto = new CategoriaDto();
