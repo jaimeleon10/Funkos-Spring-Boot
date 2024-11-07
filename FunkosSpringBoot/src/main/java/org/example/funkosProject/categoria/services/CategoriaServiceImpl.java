@@ -63,7 +63,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @CachePut
     public Categoria save(CategoriaDto categoriaDto) {
         log.info("Guardando nueva categoria llamada: {}", categoriaDto.getNombre());
-        if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
+        if (repository.findByNombre(categoriaDto.getNombre()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe");
         }
         return repository.save(mapper.toCategoria(categoriaDto));
@@ -79,7 +79,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         var result = repository.findById(UUID.fromString(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe la categoria con id " + id)
         );
-        if (!validator.isNameUnique(mapper.toCategoria(categoriaDto).getNombre())) {
+        if (repository.findByNombre(categoriaDto.getNombre()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la categoria ya existe");
         }
         return repository.save(mapper.toCategoriaUpdate(categoriaDto, result));

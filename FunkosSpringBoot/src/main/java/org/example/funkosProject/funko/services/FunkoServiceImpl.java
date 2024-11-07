@@ -84,7 +84,7 @@ public class FunkoServiceImpl implements FunkoService{
     public Funko save(FunkoDto funkoDto) {
         log.info("Guardando nuevo funko llamado: {}", funkoDto.getNombre());
         var categoria = categoriaService.getByNombre(funkoDto.getCategoria());
-        if (!validator.isNameUnique(funkoDto.getNombre())) {
+        if (repository.findByNombre(funkoDto.getNombre()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre del funko ya existe");
         }
         var funko = repository.save(mapper.toFunko(funkoDto, categoria));
@@ -102,7 +102,7 @@ public class FunkoServiceImpl implements FunkoService{
         var res = repository.findById(Long.parseLong(id)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el funko con id " + id)
         );
-        if (!validator.isNameUnique(funkoDto.getNombre())) {
+        if (repository.findByNombre(funkoDto.getNombre()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre del funko ya existe");
         }
         var categoria = categoriaService.getByNombre(funkoDto.getCategoria());

@@ -147,7 +147,7 @@ class CategoriaServiceImplTest {
         nuevaCategoria.setNombre("CategoriaTest");
         nuevaCategoria.setActivado(true);
 
-        when(validator.isNameUnique(nuevaCategoriaDto.getNombre())).thenReturn(true);
+        when(repository.findByNombre(nuevaCategoriaDto.getNombre())).thenReturn(Optional.empty());
         when(mapper.toCategoria(nuevaCategoriaDto)).thenReturn(nuevaCategoria);
         when(repository.save(nuevaCategoria)).thenReturn(nuevaCategoria);
 
@@ -159,9 +159,9 @@ class CategoriaServiceImplTest {
                 () -> assertTrue(result.getActivado())
         );
 
-        verify(validator, times(1)).isNameUnique(nuevaCategoriaDto.getNombre());
+        verify(repository, times(1)).findByNombre(nuevaCategoriaDto.getNombre());
         verify(repository, times(1)).save(nuevaCategoria);
-        verify(mapper, times(2)).toCategoria(nuevaCategoriaDto);
+        verify(mapper, times(1)).toCategoria(nuevaCategoriaDto);
     }
 
     @Test
@@ -174,8 +174,7 @@ class CategoriaServiceImplTest {
         nuevaCategoria.setNombre("CategoriaTest");
         nuevaCategoria.setActivado(true);
 
-        when(mapper.toCategoria(nuevaCategoriaDto)).thenReturn(nuevaCategoria);
-        when(validator.isNameUnique("CategoriaTest")).thenReturn(false);
+        when(repository.findByNombre(nuevaCategoriaDto.getNombre())).thenReturn(Optional.of(nuevaCategoria));
 
         ResponseStatusException thrown = assertThrows(
                 ResponseStatusException.class, () -> service.save(nuevaCategoriaDto)
@@ -184,9 +183,7 @@ class CategoriaServiceImplTest {
         assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatusCode());
         assertEquals("El nombre de la categoria ya existe", thrown.getReason());
 
-        verify(validator, times(1)).isNameUnique(nuevaCategoriaDto.getNombre());
-        verify(mapper, times(1)).toCategoria(nuevaCategoriaDto);
-
+        verify(repository, times(1)).findByNombre(nuevaCategoriaDto.getNombre());
     }
 
     @Test
@@ -211,8 +208,7 @@ class CategoriaServiceImplTest {
 
         when(validator.isIdValid("4182d617-ec89-4fbc-be95-85e461778766")).thenReturn(true);
         when(repository.findById(id)).thenReturn(Optional.of(categoriaExistente));
-        when(mapper.toCategoria(categoriaUpdateDto)).thenReturn(categoriaMocked);
-        when(validator.isNameUnique("CategoriaTestUpdate")).thenReturn(true);
+        when(repository.findByNombre(categoriaUpdateDto.getNombre())).thenReturn(Optional.empty());
         when(mapper.toCategoriaUpdate(categoriaUpdateDto, categoriaExistente)).thenReturn(categoriaUpdate);
         when(repository.save(categoriaUpdate)).thenReturn(categoriaUpdate);
 
@@ -228,9 +224,7 @@ class CategoriaServiceImplTest {
         verify(validator, times(1)).isIdValid("4182d617-ec89-4fbc-be95-85e461778766");
         verify(repository, times(1)).findById(id);
         verify(repository, times(1)).save(categoriaUpdate);
-        verify(mapper, times(1)).toCategoriaUpdate(categoriaUpdateDto, categoriaExistente);
-        verify(mapper, times(1)).toCategoria(categoriaUpdateDto);
-        verify(validator, times(1)).isNameUnique("CategoriaTestUpdate");
+        verify(repository, times(1)).findByNombre(categoriaUpdateDto.getNombre());
     }
 
     @Test
@@ -286,11 +280,11 @@ class CategoriaServiceImplTest {
 
         Categoria categoriaMocked = new Categoria();
         categoriaMocked.setNombre("CategoriaTestUpdate");
+        categoriaMocked.setActivado(true);
 
         when(validator.isIdValid("4182d617-ec89-4fbc-be95-85e461778766")).thenReturn(true);
         when(repository.findById(id)).thenReturn(Optional.of(categoriaExistente));
-        when(mapper.toCategoria(categoriaUpdateDto)).thenReturn(categoriaMocked);
-        when(validator.isNameUnique("CategoriaTestUpdate")).thenReturn(false);
+        when(repository.findByNombre(categoriaUpdateDto.getNombre())).thenReturn(Optional.of(categoriaMocked));
 
         ResponseStatusException thrown = assertThrows(
                 ResponseStatusException.class, () -> service.update("4182d617-ec89-4fbc-be95-85e461778766", categoriaUpdateDto)
@@ -301,8 +295,7 @@ class CategoriaServiceImplTest {
 
         verify(validator, times(1)).isIdValid("4182d617-ec89-4fbc-be95-85e461778766");
         verify(repository, times(1)).findById(id);
-        verify(mapper, times(1)).toCategoria(categoriaUpdateDto);
-        verify(validator, times(1)).isNameUnique("CategoriaTestUpdate");
+        verify(repository, times(1)).findByNombre(categoriaUpdateDto.getNombre());
     }
 
     @Test

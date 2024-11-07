@@ -7,17 +7,6 @@ import java.util.UUID;
 
 @Component
 public class FunkoValidator {
-
-    private final FunkoRepository funkoRepository;
-
-    public FunkoValidator(FunkoRepository funkoRepository) {
-        this.funkoRepository = funkoRepository;
-    }
-
-    public boolean isNameUnique(String nombre) {
-        return funkoRepository.findByNombre(nombre).isEmpty();
-    }
-
     public boolean isIdValid(String value) {
         try {
             Long.parseLong(value);
