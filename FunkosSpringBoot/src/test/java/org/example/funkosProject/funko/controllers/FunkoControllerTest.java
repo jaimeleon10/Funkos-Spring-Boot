@@ -206,6 +206,81 @@ class FunkoControllerTest {
     }
 
     @Test
+    void nombreIsBlank() throws Exception {
+        FunkoDto funkoDto = new FunkoDto();
+        funkoDto.setNombre("");
+        funkoDto.setPrecio(10.00);
+        funkoDto.setCategoria("CategoriaTest");
+
+        mvc.perform(post(myEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(funkoDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.nombre").value("El nombre no puede ser un campo vacio"))
+                .andReturn();
+    }
+
+    @Test
+    void precioMenorCero() throws Exception {
+        FunkoDto funkoDto = new FunkoDto();
+        funkoDto.setNombre("FunkoTest");
+        funkoDto.setPrecio(-1.00);
+        funkoDto.setCategoria("CategoriaTest");
+
+        mvc.perform(post(myEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(funkoDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.precio").value("El precio debe ser mayor que 0"))
+                .andReturn();
+    }
+
+    @Test
+    void precioMayorCincuenta() throws Exception {
+        FunkoDto funkoDto = new FunkoDto();
+        funkoDto.setNombre("FunkoTest");
+        funkoDto.setPrecio(51.00);
+        funkoDto.setCategoria("CategoriaTest");
+
+        mvc.perform(post(myEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(funkoDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.precio").value("El precio debe ser menor que 50"))
+                .andReturn();
+    }
+
+    @Test
+    void precioNull() throws Exception {
+        FunkoDto funkoDtoConPrecioNulo = new FunkoDto();
+        funkoDtoConPrecioNulo.setNombre("FunkoTest");
+        funkoDtoConPrecioNulo.setPrecio(null);
+        funkoDtoConPrecioNulo.setCategoria("CategoriaTest");
+
+        mvc.perform(post(myEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(funkoDtoConPrecioNulo)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.precio").value("El precio no puede ser un campo nulo"))
+                .andReturn();
+    }
+
+    @Test
+    void categoriaBlank() throws Exception {
+        FunkoDto funkoDto = new FunkoDto();
+        funkoDto.setNombre("FunkoTest");
+        funkoDto.setPrecio(10.00);
+        funkoDto.setCategoria("");
+
+        mvc.perform(post(myEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(funkoDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.categoria").value("La categoria no puede ser un campo vacio"))
+                .andReturn();
+    }
+
+    @Test
     void testValidationExceptionHandler() throws Exception {
         // Enviar una solicitud con un campo inválido (sin nombre)
         mvc.perform(post(myEndpoint)

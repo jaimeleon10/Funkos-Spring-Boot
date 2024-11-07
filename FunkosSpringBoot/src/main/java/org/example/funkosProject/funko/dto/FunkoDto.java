@@ -17,6 +17,5 @@ public class FunkoDto {
         Double precio;
 
         @NotBlank(message = "La categoria no puede ser un campo vacio")
-        @NotNull(message = "La categoria no puede un campo nulo")
         String categoria;
 }

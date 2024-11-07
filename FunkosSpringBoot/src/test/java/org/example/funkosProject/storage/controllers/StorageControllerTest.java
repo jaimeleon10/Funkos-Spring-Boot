@@ -16,6 +16,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.ByteArrayInputStream;
@@ -29,82 +30,58 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ExtendWith(MockitoExtension.class)
 class StorageControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
 
     @MockBean
     private StorageService storageService;
 
-    @Autowired
-    private MockMvc mvc;
-
     private final String endpoint = "/funkos/files";
 
-    @MockBean
-    private HttpServletRequest request;
+    @Test
+    public void serveFile() throws Exception {
+        MockMultipartFile mockFile = new MockMultipartFile(
+                "file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "Contenido del archivo".getBytes());
 
-    @MockBean
-    private Resource resource;
+        when(storageService.loadAsResource(any())).thenReturn(mockFile.getResource());
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
-    /*@Test
-    void serveFile() throws Exception {
-        String filename = "test-image3.png";
-
-        Resource mockResource = mock(Resource.class);
-        InputStream mockInputStream = new ByteArrayInputStream("mock content".getBytes());
-        when(mockResource.getInputStream()).thenReturn(mockInputStream);
-
-        when(storageService.loadAsResource(filename)).thenReturn(mockResource);
-
-        MockHttpServletResponse response = mvc.perform(
-                        get(endpoint + "/" + filename)
-                                .accept(MediaType.APPLICATION_JSON))
+        MockHttpServletResponse response = mockMvc.perform(
+                        get(endpoint + "/" + mockFile.getName()))
                 .andReturn().getResponse();
 
         assertAll(
                 () -> assertEquals(HttpStatus.OK.value(), response.getStatus()),
-                () -> assertTrue(response.getContentLength() > 0)
+                () -> assertEquals("Contenido del archivo", response.getContentAsString())
         );
-
-        verify(storageService, times(1)).loadAsResource(filename);
-    }*/
-
-    /*@Test
-    void serveFileThrowsException() throws Exception {
-        String filename = "test-image3.kei";
-
-        when(storageService.loadAsResource(filename)).thenReturn(resource);
-        when(resource.getInputStream()).thenThrow(new IOException("Unable to determine file type"));
-
-        MockHttpServletResponse response = mvc.perform(
-                        get(endpoint + "/" + filename)
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
-                () -> assertTrue(response.getContentAsString().contains("No se puede determinar el tipo de fichero"))
-        );
-
-        verify(storageService, times(1)).loadAsResource(filename);
-    }*/
+    }
 
     @Test
-    public void testServeFile_FileNotFound() throws Exception {
+    public void serveFileNotFound() throws Exception {
         String filename = "nonexistentfile.txt";
 
         when(storageService.loadAsResource(anyString())).thenThrow(new StorageNotFound("File not found"));
-        MockHttpServletResponse response = mvc.perform(
+        MockHttpServletResponse response = mockMvc.perform(
                         get(endpoint + "/" + filename)
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
         verify(storageService, times(1)).loadAsResource(filename);
+    }
+
+    @Test
+    public void serveFileUnknownContentType() throws Exception {
+        MockMultipartFile mockFile = new MockMultipartFile(
+                "file", "archivo.desconocido", null, "Contenido".getBytes());
+
+        when(storageService.loadAsResource(any())).thenReturn(mockFile.getResource());
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        get(endpoint + "/" + mockFile.getName()))
+                .andReturn().getResponse();
+
+        assertEquals("application/octet-stream", response.getContentType());
     }
 }

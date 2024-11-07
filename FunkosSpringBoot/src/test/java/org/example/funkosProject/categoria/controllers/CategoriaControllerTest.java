@@ -189,6 +189,25 @@ class CategoriaControllerTest {
     }
 
     @Test
+    void nombreIsBlank() throws Exception {
+        CategoriaDto nuevoCategoria = new CategoriaDto();
+        nuevoCategoria.setNombre("");
+        nuevoCategoria.setActivado(true);
+
+        MockHttpServletResponse response = mvc.perform(
+                        post(myEndpoint)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(nuevoCategoria)))
+                .andReturn().getResponse();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+
+        String responseContent = response.getContentAsString();
+
+        assertTrue(responseContent.contains("El nombre no puede ser un campo vacio"));
+    }
+
+    @Test
     void testValidationExceptionHandler() throws Exception {
         // Enviar una solicitud con un campo inválido (sin nombre)
         mvc.perform(post(myEndpoint)
