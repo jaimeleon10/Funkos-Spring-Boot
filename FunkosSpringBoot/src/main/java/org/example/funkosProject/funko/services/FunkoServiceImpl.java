@@ -1,5 +1,7 @@
 package org.example.funkosProject.funko.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.example.funkosProject.categoria.services.CategoriaService;
 import org.example.funkosProject.funko.dto.FunkoDto;
@@ -7,6 +9,11 @@ import org.example.funkosProject.funko.mappers.FunkoMapper;
 import org.example.funkosProject.funko.models.Funko;
 import org.example.funkosProject.funko.repositories.FunkoRepository;
 import org.example.funkosProject.funko.validators.FunkoValidator;
+import org.example.funkosProject.notifications.config.WebSocketConfig;
+import org.example.funkosProject.notifications.config.WebSocketHandler;
+import org.example.funkosProject.notifications.dto.NotificationDto;
+import org.example.funkosProject.notifications.mappers.NotificationMapper;
+import org.example.funkosProject.notifications.models.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,13 +34,21 @@ public class FunkoServiceImpl implements FunkoService{
     private final FunkoMapper mapper;
     private final CategoriaService categoriaService;
     private final FunkoValidator validator;
+    private final WebSocketConfig webSocketConfig;
+    private WebSocketHandler webSocketHandler;
+    private final NotificationMapper notificacionMapper;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public FunkoServiceImpl(FunkoRepository repository, FunkoMapper mapper, CategoriaService categoriaService, FunkoValidator validator) {
+    public FunkoServiceImpl(FunkoRepository repository, FunkoMapper mapper, CategoriaService categoriaService, FunkoValidator validator, WebSocketConfig webSocketConfig, NotificationMapper notificacionMapper) {
         this.repository = repository;
         this.mapper = mapper;
         this.categoriaService = categoriaService;
         this.validator = validator;
+        this.webSocketConfig = webSocketConfig;
+        webSocketHandler = webSocketConfig.webSocketFunkosHandler();
+        objectMapper = new ObjectMapper();
+        this.notificacionMapper = notificacionMapper;
     }
 
     @Override
@@ -71,7 +87,9 @@ public class FunkoServiceImpl implements FunkoService{
         if (!validator.isNameUnique(funkoDto.getNombre())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre del funko ya existe");
         }
-        return repository.save(mapper.toFunko(funkoDto, categoria));
+        var funko = repository.save(mapper.toFunko(funkoDto, categoria));
+        onChange(Notification.Tipo.CREATE, funko);
+        return funko;
     }
 
     @CachePut
@@ -91,7 +109,9 @@ public class FunkoServiceImpl implements FunkoService{
         res.setNombre(funkoDto.getNombre());
         res.setPrecio(funkoDto.getPrecio());
         res.setCategoria(categoria);
-        return repository.save(res);
+        var funko = repository.save(res);
+        onChange(Notification.Tipo.UPDATE, funko);
+        return funko;
     }
 
     @CacheEvict
@@ -105,6 +125,43 @@ public class FunkoServiceImpl implements FunkoService{
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe el funko con id " + id)
         );
         repository.deleteById(Long.parseLong(id));
+        onChange(Notification.Tipo.DELETE, funko);
         return funko;
+    }
+
+    void onChange(Notification.Tipo tipo, Funko data) {
+        log.debug("Servicio de funkos onChange con tipo: " + tipo + " y datos: " + data);
+
+        if (webSocketHandler == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketHandler = this.webSocketConfig.webSocketFunkosHandler();
+        }
+
+        try {
+            Notification<NotificationDto> notification = new Notification<>(
+                    "FUNKOS",
+                    tipo,
+                    notificacionMapper.toNotificationDto(data),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = objectMapper.writeValueAsString((notification));
+
+            log.info("Enviando mensaje a los clientes ws");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    webSocketHandler.sendMessage(json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
+    }
+
+    public void setWebSocketHandler(WebSocketHandler webSocketHandler) {
+        this.webSocketHandler = webSocketHandler;
     }
 }

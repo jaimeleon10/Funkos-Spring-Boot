@@ -7,15 +7,21 @@ import org.example.funkosProject.funko.mappers.FunkoMapper;
 import org.example.funkosProject.funko.models.Funko;
 import org.example.funkosProject.funko.repositories.FunkoRepository;
 import org.example.funkosProject.funko.validators.FunkoValidator;
+import org.example.funkosProject.notifications.config.WebSocketConfig;
+import org.example.funkosProject.notifications.config.WebSocketHandler;
+import org.example.funkosProject.notifications.mappers.NotificationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +46,17 @@ class FunkoServiceImplTest {
     @InjectMocks
     private FunkoServiceImpl service;
 
+    @Mock
+    private WebSocketConfig webSocketConfig;
+
+    WebSocketHandler webSocketHandler = mock(WebSocketHandler.class);
+
+    @Mock
+    private NotificationMapper notificacionMapper;
+
+    @Captor
+    private ArgumentCaptor<Funko> funkoCaptor;
+
     private Funko funkoTest;
     private Categoria categoriaTest;
 
@@ -54,6 +71,8 @@ class FunkoServiceImplTest {
         funkoTest.setNombre("FunkoTest");
         funkoTest.setPrecio(10.00);
         funkoTest.setCategoria(categoriaTest);
+
+        service.setWebSocketHandler(webSocketHandler);
     }
 
     @Test
@@ -154,7 +173,7 @@ class FunkoServiceImplTest {
     }
 
     @Test
-    void save() {
+    void save() throws IOException {
         Categoria nuevaCategoria = new Categoria();
         nuevaCategoria.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766"));
         nuevaCategoria.setNombre("CategoriaTest");
@@ -174,6 +193,7 @@ class FunkoServiceImplTest {
         when(validator.isNameUnique(nuevoFunkoDto.getNombre())).thenReturn(true);
         when(mapper.toFunko(nuevoFunkoDto, nuevaCategoria)).thenReturn(nuevoFunko);
         when(repository.save(nuevoFunko)).thenReturn(nuevoFunko);
+        doNothing().when(webSocketHandler).sendMessage(any());
 
         var result = service.save(nuevoFunkoDto);
 
@@ -241,7 +261,7 @@ class FunkoServiceImplTest {
     }
 
     @Test
-    void update() {
+    void update() throws IOException {
         Categoria updatedCategoria = new Categoria();
         updatedCategoria.setId(UUID.fromString("4182d617-ec89-4fbc-be95-85e461778766"));
         updatedCategoria.setNombre("CategoriaTest");
@@ -263,6 +283,7 @@ class FunkoServiceImplTest {
         when(validator.isNameUnique(updatedFunkoDto.getNombre())).thenReturn(true);
         when(categoriaService.getByNombre(updatedFunkoDto.getCategoria())).thenReturn(updatedCategoria);
         when(repository.save(updatedFunko)).thenReturn(updatedFunko);
+        doNothing().when(webSocketHandler).sendMessage(any());
 
         var result = service.update("2", updatedFunkoDto);
 
@@ -411,9 +432,11 @@ class FunkoServiceImplTest {
     }
 
     @Test
-    void delete() {
+    void delete() throws IOException {
         when(validator.isIdValid("1")).thenReturn(true);
         when(repository.findById(1L)).thenReturn(Optional.of(funkoTest));
+        doNothing().when(webSocketHandler).sendMessage(any());
+
 
         var result = service.delete("1");
 

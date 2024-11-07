@@ -35,4 +35,8 @@ public class Categoria {
 
     @Column(name = "activado")
     private Boolean activado = true;
+
+    public boolean getActivado() {
+        return activado;
+    }
 }

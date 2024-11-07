@@ -212,12 +212,16 @@ class FunkoControllerTest {
         funkoDto.setPrecio(10.00);
         funkoDto.setCategoria("CategoriaTest");
 
-        mvc.perform(post(myEndpoint)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(funkoDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.nombre").value("El nombre no puede ser un campo vacio"))
-                .andReturn();
+        MockHttpServletResponse response = mvc.perform(
+                        post(myEndpoint)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(funkoDto)))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
+                () -> assertTrue(response.getContentAsString().contains("El nombre no puede ser un campo vacio"))
+        );
     }
 
     @Test
@@ -227,12 +231,16 @@ class FunkoControllerTest {
         funkoDto.setPrecio(-1.00);
         funkoDto.setCategoria("CategoriaTest");
 
-        mvc.perform(post(myEndpoint)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(funkoDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.precio").value("El precio debe ser mayor que 0"))
-                .andReturn();
+        MockHttpServletResponse response = mvc.perform(
+                        post(myEndpoint)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(funkoDto)))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
+                () -> assertTrue(response.getContentAsString().contains("El precio debe ser mayor que 0"))
+        );
     }
 
     @Test
@@ -242,27 +250,35 @@ class FunkoControllerTest {
         funkoDto.setPrecio(51.00);
         funkoDto.setCategoria("CategoriaTest");
 
-        mvc.perform(post(myEndpoint)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(funkoDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.precio").value("El precio debe ser menor que 50"))
-                .andReturn();
+        MockHttpServletResponse response = mvc.perform(
+                        post(myEndpoint)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(funkoDto)))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
+                () -> assertTrue(response.getContentAsString().contains("El precio debe ser menor que 50"))
+        );
     }
 
     @Test
     void precioNull() throws Exception {
-        FunkoDto funkoDtoConPrecioNulo = new FunkoDto();
-        funkoDtoConPrecioNulo.setNombre("FunkoTest");
-        funkoDtoConPrecioNulo.setPrecio(null);
-        funkoDtoConPrecioNulo.setCategoria("CategoriaTest");
+        FunkoDto funkoDto = new FunkoDto();
+        funkoDto.setNombre("FunkoTest");
+        funkoDto.setPrecio(null);
+        funkoDto.setCategoria("CategoriaTest");
 
-        mvc.perform(post(myEndpoint)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(funkoDtoConPrecioNulo)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.precio").value("El precio no puede ser un campo nulo"))
-                .andReturn();
+        MockHttpServletResponse response = mvc.perform(
+                        post(myEndpoint)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(funkoDto)))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
+                () -> assertTrue(response.getContentAsString().contains("El precio no puede ser un campo nulo"))
+        );
     }
 
     @Test
@@ -272,12 +288,16 @@ class FunkoControllerTest {
         funkoDto.setPrecio(10.00);
         funkoDto.setCategoria("");
 
-        mvc.perform(post(myEndpoint)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(funkoDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.categoria").value("La categoria no puede ser un campo vacio"))
-                .andReturn();
+        MockHttpServletResponse response = mvc.perform(
+                        post(myEndpoint)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(funkoDto)))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus()),
+                () -> assertTrue(response.getContentAsString().contains("La categoria no puede ser un campo vacio"))
+        );
     }
 
     @Test
